@@ -34,7 +34,15 @@ namespace WebAPIUnicredit.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<BookInstance>> GetBookInstance(int id)
         {
-            var bookInstance = await _context.BookInstances.FindAsync(id);
+            var bookInstance = new BookInstance();
+            try
+            {
+                bookInstance = await _context.BookInstances.FindAsync(id);
+            }
+            catch(Exception ex)
+            {
+                return NotFound();
+            }
 
             if (bookInstance == null)
             {

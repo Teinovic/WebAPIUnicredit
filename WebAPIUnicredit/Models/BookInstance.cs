@@ -28,5 +28,6 @@ namespace WebAPIUnicredit.Models
         
         [Column(TypeName = "nvarchar(100)")]
         public string publisher { get; set; }
+
     }
 }
