@@ -14,6 +14,7 @@ namespace WebAPIUnicredit
 {
     public class Startup
     {
+        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -29,7 +30,18 @@ namespace WebAPIUnicredit
             services.AddDbContext<BookDataDBContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DevConnection")));
 
-            services.AddCors();
+            services.AddSwaggerGen();
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: MyAllowSpecificOrigins,
+                              builder =>
+                              {
+                                  builder.WithOrigins("http://localhost:3000")
+                                                       .AllowAnyHeader()
+                                                       .AllowAnyMethod();
+                              });    
+            });
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -41,10 +53,11 @@ namespace WebAPIUnicredit
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseCors(options =>
-            options.WithOrigins("http://localhost:3000")
-            .AllowAnyHeader()
-            .AllowAnyMethod());
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Books API V1");
+            });
 
             if (env.IsDevelopment())
             {
@@ -59,6 +72,8 @@ namespace WebAPIUnicredit
             app.UseSpaStaticFiles();
 
             app.UseRouting();
+
+            app.UseCors(MyAllowSpecificOrigins);
 
             app.UseEndpoints(endpoints =>
             {
