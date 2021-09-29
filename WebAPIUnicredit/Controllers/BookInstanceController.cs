@@ -7,13 +7,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using WebAPIUnicredit.Models;
 
-
 namespace WebAPIUnicredit.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class BookInstanceController : ControllerBase
     {
+
+
 
         private readonly BookDataDBContext _context;
 
@@ -27,7 +28,13 @@ namespace WebAPIUnicredit.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BookInstance>>> GetBookInstances()
         {
-            return await _context.BookInstances.ToListAsync();
+            try {
+                return await _context.BookInstances.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         // GET api/<ValuesController>/5
@@ -41,7 +48,7 @@ namespace WebAPIUnicredit.Controllers
             }
             catch(Exception ex)
             {
-                return NotFound();
+                return StatusCode(500, ex.Message);
             }
 
             if (bookInstance == null)
@@ -56,10 +63,17 @@ namespace WebAPIUnicredit.Controllers
         [HttpPost]
         public async Task<ActionResult<BookInstance>> PostBookInstance(BookInstance bookInstance)
         {
-            _context.BookInstances.Add(bookInstance);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.BookInstances.Add(bookInstance);
+                await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetBookInstance", new { id = bookInstance.id }, bookInstance);
+                return CreatedAtAction("GetBookInstance", new { id = bookInstance.id }, bookInstance);
+            } 
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         
 
@@ -75,7 +89,7 @@ namespace WebAPIUnicredit.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch(DbUpdateConcurrencyException)
+            catch(DbUpdateConcurrencyException ex)
             {
                 if (!BookInstanceExists(id))
                 {
@@ -83,7 +97,7 @@ namespace WebAPIUnicredit.Controllers
                 }
                 else
                 {
-                    throw;
+                    return StatusCode(500, ex.Message);
                 }
             }
 
@@ -95,16 +109,23 @@ namespace WebAPIUnicredit.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<BookInstance>> DeleteBookInstance(int id)
         {
-            var bookInstance = await _context.BookInstances.FindAsync(id);
-            if (bookInstance == null)
+            try
             {
-                return NotFound();
+                var bookInstance = await _context.BookInstances.FindAsync(id);
+                if (bookInstance == null)
+                {
+                    return NotFound();
+                }
+
+                _context.BookInstances.Remove(bookInstance);
+                await _context.SaveChangesAsync();
+
+                return bookInstance;
             }
-
-            _context.BookInstances.Remove(bookInstance);
-            await _context.SaveChangesAsync();
-
-            return bookInstance;
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         private bool BookInstanceExists(int id)
